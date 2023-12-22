@@ -1,0 +1,8 @@
+todo.yml
+.env
+config.ts
+node_modules
+package-lock.json
+structure.yml
+dist
+*.log
