@@ -1,6 +1,7 @@
 import express from 'express';
 import config from '../config.js';
 import Logger from '../logger.js';
+import nodeURL from 'node:url';
 
 const logger = new Logger('gateway');
 
@@ -22,19 +23,27 @@ gateway.all('/api/:service/:route', async (req, res) => {
 
         const path = '/service' + req.path.split('/api')[1];
 
-        const resp = await fetch(`http://${service_config.host}:${service_config.port}${path}`, {
-            headers: {
-                'Content-Type': 'application/json'
-            },
+        const url = nodeURL.format({
+            protocol: req.protocol,
+            hostname: service_config.host,
+            pathname: path,
+            query: req.query as any,
+            port: service_config.port
+        });
+
+        delete req.headers['content-length'];
+
+        const resp = await fetch(url, {
+            headers: req.headers as any,
             method: req.method,
-            body: JSON.stringify(req.body)
+            body: (req.method !== 'GET' && req.method !== 'HEAD') ? JSON.stringify(req.body) : null
         });
 
         const json_resp = await resp.json();
 
         if (resp.status) {
             return res.status(resp.status).json(json_resp);
-        }
+        };
     } catch (err) {
         logger.log(`[ERROR]: an error has occured with route: ${req.url}`, err);
         return res.status(500).json({

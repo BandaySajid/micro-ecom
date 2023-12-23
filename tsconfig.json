@@ -10,8 +10,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
-    "downlevelIteration": true
-    // Other options...
+    "downlevelIteration": true,
+    "incremental": true
   },
   "include": [
     "src/**/*.ts"

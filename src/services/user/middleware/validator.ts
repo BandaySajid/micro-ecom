@@ -2,12 +2,9 @@ import { body, validationResult } from 'express-validator';
 import express from 'express';
 
 const user_validation_schema = [
-    body('email').isEmail(),
-    body('username').isLength({ min: 7 }),
-    body('password').isLength({ min: 7 })
-        .withMessage('minimum 7 characters are required')
-        .isLength({ max: 50 })
-        .withMessage('Max 50 characters are allowed!'),
+    body('email').isEmail().withMessage('invalid email was provided!'),
+    body('username').isLength({ min: 7, max : 50 }).withMessage('minimum 7 characters and maximum 50 characters are allowed for username!'),
+    body('password').isLength({ min: 7, max : 50 }).withMessage('minimum 7 characters and maximum 50 characters are allowed for password!')
 ];
 
 const validate_user = async (req: express.Request, res: express.Response, next: any) => {

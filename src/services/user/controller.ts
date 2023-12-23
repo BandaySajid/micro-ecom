@@ -3,21 +3,9 @@ import crypto from 'node:crypto';
 import express from 'express';
 import util from './util.js';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { User, RedactedUser, AuthTokenData } from './types.js';
 
-type User = {
-    user_id: crypto.UUID,
-    username: string,
-    email: string,
-    password: string,
-};
-
-type RedactedUser = {
-    user_id: crypto.UUID,
-    username: string,
-    email: string,
-};
-
-const signup = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const handle_signup = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
         const hashed_password = util.hash_it(req.body.password);
 
@@ -39,14 +27,24 @@ const signup = async (req: express.Request, res: express.Response, next: express
 
         await db.execute('INSERT INTO users (user_id, username, email, password) VALUES (?, ?, ?, ?)', Object.values(user));
 
+        const redacted_user: RedactedUser = {
+            user_id: user.user_id,
+            email: user.email,
+            username: user.username
+        };
+
+        const auth_token_data: AuthTokenData = {
+            user: redacted_user,
+            created_on: new Date()
+        };
+
+        const token = util.generate_auth_token(auth_token_data);
+
         return res.status(201).json({
             status: 'success',
             message: 'user created succesfully',
-            user: {
-                user_id: user.user_id,
-                email: user.email,
-                username: user.username,
-            }
+            user: redacted_user,
+            auth_token: token
         });
 
     } catch (error) {
@@ -55,8 +53,15 @@ const signup = async (req: express.Request, res: express.Response, next: express
 };
 
 
-const signin = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const handle_signin = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
+        if (!req.body.username || !req.body.password) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'username and password is required!'
+            });
+        };
+
         const [existing_values] = await db.execute<RowDataPacket[]>('SELECT * FROM users where username = ?', [req.body.username]);
 
         if (existing_values.length <= 0) {
@@ -81,10 +86,18 @@ const signin = async (req: express.Request, res: express.Response, next: express
             username: user.username
         };
 
+        const auth_token_data: AuthTokenData = {
+            user: redacted_user,
+            created_on: new Date()
+        };
+
+        const token = util.generate_auth_token(auth_token_data);
+
         return res.status(201).json({
             status: 'success',
             message: 'user logged in succesfully',
-            user: redacted_user
+            user: redacted_user,
+            auth_token: token
         });
 
     } catch (error) {
@@ -92,11 +105,22 @@ const signin = async (req: express.Request, res: express.Response, next: express
     }
 };
 
-const update_user = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const handle_update_user = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        const requested_updates = Object.keys(req.body);
+
+        const user: RedactedUser = req.body.user;
 
         const allowed_updates = ['username', 'email', 'password'];
+
+        const requested_updates = req.body.updates ? Object.keys(req.body.updates) : [];
+
+        if (requested_updates.length <= 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'updates property is required and at least 1 update should be provied!',
+                allowed_updates
+            });
+        };
 
         const are_valid_updates = requested_updates.every((update) => {
             return allowed_updates.includes(update);
@@ -120,14 +144,12 @@ const update_user = async (req: express.Request, res: express.Response, next: ex
         });
 
         let final_updates = requested_updates.map((update) => {
-            return req.body[update];
+            return req.body.updates[update];
         });
 
-        const query = await db.execute<ResultSetHeader[]>(`UPDATE users SET ${updates_in_query} where user_id = '${req.headers.user_id}';`, final_updates);
+        const [result] = await db.execute<ResultSetHeader>(`UPDATE users SET ${updates_in_query} where user_id = ? ;`, final_updates.concat(user.user_id));
 
-        const updated_user: any = query[0];
-
-        if (updated_user.affectedRows <= 0) {
+        if (result.affectedRows <= 0) {
             return res.status(400).json({
                 status: 'error',
                 message: 'cannot update user!'
@@ -144,15 +166,15 @@ const update_user = async (req: express.Request, res: express.Response, next: ex
     };
 };
 
-const delete_user = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const handle_delete_user = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-        const query = await db.execute<ResultSetHeader[]>('DELETE FROM users WHERE user_id = ?;', [req.headers.user_id]);
-        const deleted_user: any = query[0];
+        const user: RedactedUser = req.body.user;
+        const [result] = await db.execute<ResultSetHeader>('DELETE FROM users WHERE user_id = ?;', [user.user_id]);
 
-        if (deleted_user.affectedRows <= 0) {
+        if (result.affectedRows <= 0) {
             return res.status(400).json({
                 status: 'error',
-                message: 'cannot delete user!'
+                message: 'user does not exist!'
             });
         };
 
@@ -166,4 +188,5 @@ const delete_user = async (req: express.Request, res: express.Response, next: ex
     };
 };
 
-export default { signup, signin, update_user, delete_user };
+export default { handle_signup, handle_signin, handle_update_user, handle_delete_user };
+

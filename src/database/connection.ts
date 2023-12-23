@@ -1,7 +1,10 @@
 import mysql from 'mysql2/promise';
 import config from '../config.js';
+import fs from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
-const connect = async (database: string, schemaQuery: string) => {
+const connect = async (database: string, schemaPathMetaUrl: string) => {
     try {
         const connection = await mysql.createConnection({
             user: 'root',
@@ -10,6 +13,10 @@ const connect = async (database: string, schemaQuery: string) => {
             database: database,
             password: config.database.password
         });
+
+        const schemaPath =  path.join(path.dirname(fileURLToPath(schemaPathMetaUrl)), 'schema.sql');
+
+        const schemaQuery: string = await fs.readFile(schemaPath, 'utf-8');
 
         await connection.execute(schemaQuery);
 
