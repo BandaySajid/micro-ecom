@@ -10,6 +10,25 @@ const gateway = express();
 gateway.use(express.json());
 gateway.use(express.urlencoded({ extended: false }));
 
+gateway.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        const xss = Object.values(req.body).find((val: any) => {
+            return is_xss(val.toString());
+        });
+        if (xss) {
+            return res.status(400).json({
+                status: 'error',
+                error: `Don't be too smart. Malicious input detected!`
+            });
+        };
+        next();
+    } catch (error) {
+        return res.status(500).json({
+            status: 'gateway error'
+        });
+    }
+});
+
 gateway.all('/api/:service/:route', async (req, res) => {
     try {
         const service = req.params.service as keyof typeof config.http.services;
@@ -58,6 +77,15 @@ gateway.all('*', (req, res) => {
         status: 'route not found'
     });
 });
+
+function is_xss(input: string) {
+    const xssPattern = /<[^>]*>/;
+    if (xssPattern.test(input)) {
+        return true
+    } else {
+        return false;
+    };
+}
 
 const listen = (host: string, port: number) => {
     gateway.listen(port, host, () => {
