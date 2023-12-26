@@ -11,19 +11,21 @@ const connect = async (database: string, schemaPathMetaUrl: string) => {
             host: process.env.DB_HOST || 'localhost',
             port: 3306,
             database: database,
-            password: config.database.password
+            password: config.database.password,
         });
 
         const schemaPath =  path.join(path.dirname(fileURLToPath(schemaPathMetaUrl)), 'schema.sql');
 
-        const schemaQuery: string = await fs.readFile(schemaPath, 'utf-8');
-
-        await connection.execute(schemaQuery);
+        const schemaQueries = (await fs.readFile(schemaPath, 'utf-8')).split('\n\n');
+        
+        schemaQueries.forEach(async (query)=>{
+            await connection.query(query);
+        });
 
         return connection;
 
     } catch (error) {
-        console.log('[DATABASE-ERROR]:', error);
+        console.error('[DATABASE-ERROR]:', error);
         process.exit(1);
     };
 };

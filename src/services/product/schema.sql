@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS products(
     category VARCHAR(15) NOT NULL,
     size VARCHAR(10),
     quantity INT NOT NULL,
-    created_on DATETIME DEFAULT(NOW())
+    created_on DATETIME DEFAULT(NOW()),
+    PRIMARY KEY(product_id)
 );

@@ -19,7 +19,7 @@ const validate_product = async (req: express.Request, res: express.Response, nex
             errors: result.array()
         });
     } catch (error) {
-        console.log('[ERROR]: An error occured while validating user:', error);
+        console.error('[ERROR]: An error occured while validating user:', error);
         res.status(500).json({
             status: 'error',
             message: 'internal server error'

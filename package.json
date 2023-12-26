@@ -8,8 +8,9 @@
     "build": "tsc && node copyfiles.js",
     "user": "node dist/services/user/service.js",
     "product": "node dist/services/product/service.js",
+    "order": "node dist/services/order/service.js",
     "start": "node dist/index.js",
-    "all": "npm run build && concurrently \"npm run start\" \" npm run user\"  \"npm run product\""
+    "all": "npm run build && concurrently \"npm run start\" \" npm run user\"  \"npm run product\" \"npm run order\""
   },
   "keywords": [
     "ecom",
@@ -27,6 +28,8 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
+    "@types/amqplib": "^0.10.4",
+    "amqplib": "^0.10.3",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",

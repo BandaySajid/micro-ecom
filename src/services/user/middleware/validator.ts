@@ -18,7 +18,7 @@ const validate_user = async (req: express.Request, res: express.Response, next: 
             errors: result.array()
         });
     } catch (error) {
-        console.log('[ERROR]: An error occured while validating user:', error);
+        console.error('[ERROR]: An error occured while validating user:', error);
         res.status(500).json({
             status: 'error',
             message: 'internal server error'

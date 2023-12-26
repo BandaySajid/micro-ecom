@@ -11,7 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "downlevelIteration": true,
-    "incremental": true
+    // "incremental": true
   },
   "include": [
     "src/**/*.ts"

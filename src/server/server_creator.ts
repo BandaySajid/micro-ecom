@@ -1,5 +1,6 @@
 import express from 'express';
 import Logger from '../logger.js';
+import crypto from 'node:crypto';
 
 const server_creator = (service: string) => {
     const logger = new Logger(service);
@@ -10,6 +11,10 @@ const server_creator = (service: string) => {
         app.use(express.urlencoded({ extended: false }));
 
         if (router) {
+            app.use((req: express.Request, res: express.Response, next: express.NextFunction)=>{
+                req.headers.req_id = crypto.randomUUID();
+                next();
+            });
             app.use(`/service/${service}`, router);
             app.use((req: express.Request, res: express.Response)=>{
                 return res.status(404).json({

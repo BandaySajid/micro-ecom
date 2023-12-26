@@ -189,4 +189,3 @@ const handle_delete_user = async (req: express.Request, res: express.Response, n
 };
 
 export default { handle_signup, handle_signin, handle_update_user, handle_delete_user };
-

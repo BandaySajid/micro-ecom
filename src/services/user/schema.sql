@@ -3,5 +3,6 @@ CREATE TABLE IF NOT EXISTS users(
     username varchar(255) UNIQUE not null,
     email varchar(255) UNIQUE not null,
     password varchar(255) not null,
-    created_on DATETIME DEFAULT(NOW())
+    created_on DATETIME DEFAULT(NOW()),
+    PRIMARY KEY(user_id)
 );
