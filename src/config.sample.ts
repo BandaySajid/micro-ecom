@@ -5,9 +5,9 @@ type HttpConfig = {
 
 export default {
     database: {
-        host: 'localhost',
+        host: process.env.DB_HOST || 'mysql',
         user: 'root',
-        password: '12345',
+        password: '72543',
         services: {
             user: 'microEcomUsers',
             product: 'microEcomProducts',
@@ -17,23 +17,27 @@ export default {
 
     http: {
         gateway: {
-            host: '127.0.0.1',
+            host: process.env.HTTP_HOST || '127.0.0.1',
             port: 9090
         } as HttpConfig,
         services: {
             user: {
-                host: '127.0.0.1',
+                host: process.env.HTTP_HOST || '127.0.0.1',
                 port: 9091
             } as HttpConfig,
             product: {
-                host: '127.0.0.1',
+                host: process.env.HTTP_HOST || '127.0.0.1',
                 port: 9092
             } as HttpConfig,
             order: {
-                host: '127.0.0.1',
+                host: process.env.HTTP_HOST || '127.0.0.1',
                 port: 9093
             } as HttpConfig,
         }
+    },
+
+    rabbitmq: {
+        host: process.env.MQ_HOST ||'rabbitmq'
     },
 
     jwt: {

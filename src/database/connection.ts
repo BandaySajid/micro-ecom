@@ -8,17 +8,17 @@ const connect = async (database: string, schemaPathMetaUrl: string) => {
     try {
         const connection = await mysql.createConnection({
             user: 'root',
-            host: process.env.DB_HOST || 'localhost',
+            host: process.env.DB_HOST || config.database.host || 'localhost',
             port: 3306,
             database: database,
             password: config.database.password,
         });
 
-        const schemaPath =  path.join(path.dirname(fileURLToPath(schemaPathMetaUrl)), 'schema.sql');
+        const schemaPath = path.join(path.dirname(fileURLToPath(schemaPathMetaUrl)), 'schema.sql');
 
         const schemaQueries = (await fs.readFile(schemaPath, 'utf-8')).split('\n\n');
-        
-        schemaQueries.forEach(async (query)=>{
+
+        schemaQueries.forEach(async (query) => {
             await connection.query(query);
         });
 

@@ -15,6 +15,7 @@ type RedactedUser = {
 
 type AuthTokenData = {
     user: RedactedUser
+    role: string
     created_on: Date
 };
 

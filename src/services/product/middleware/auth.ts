@@ -16,15 +16,29 @@ const auth = (req: express.Request, res: express.Response, next: express.NextFun
         const decoded = jwt.verify(auth_token, config.jwt.secret) as any;
 
         req.body.user = decoded.user;
+        req.body.user.role = decoded.role;
 
-        return next();
+        next();
 
     } catch (error) {
-        return res.status(401).json({
-            status: 'error',
-            error: 'unauthenticated user!'
-        });
+        next(error);
     };
 };
 
-export { auth };
+const verify_admin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        if (req.body.user.role === 'admin') {
+            return next();
+        };
+
+        return res.status(400).json({
+            status: 'error',
+            error: 'you are not authroized to do this action!'
+        });
+    } catch (error) {
+        next(error);
+    };
+};
+
+
+export { auth, verify_admin };

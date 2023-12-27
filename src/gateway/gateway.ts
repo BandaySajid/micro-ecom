@@ -2,11 +2,20 @@ import express from 'express';
 import config from '../config.js';
 import Logger from '../logger.js';
 import nodeURL from 'node:url';
+import { rateLimit } from 'express-rate-limit'
+
+const limiter = rateLimit({
+    windowMs: 1000, // 1 second
+    message: 'This is too much, stop bombarding the server!!!',
+    limit: 1, // Limit each IP to 1 requests per `window` (here, per 1 second).
+    standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+})
 
 const logger = new Logger('gateway');
 
 const gateway = express();
 
+gateway.use(limiter);
 gateway.use(express.json());
 gateway.use(express.urlencoded({ extended: false }));
 
@@ -44,7 +53,7 @@ gateway.all('/api/:service/:route', async (req, res) => {
 
         const url = nodeURL.format({
             protocol: req.protocol,
-            hostname: service_config.host,
+            hostname: '127.0.0.1',
             pathname: path,
             query: req.query as any,
             port: service_config.port

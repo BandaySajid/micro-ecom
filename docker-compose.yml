@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  app:
+    container_name: microEcom_app
+    image: node:latest
+    working_dir: /opt/microEcom
+    volumes:
+      - ./:/opt/microEcom
+    command: >
+      bash -c "npm install && npm install -g typescript && tsc && npm run all"
+    ports:
+      - "9090:9090"
+    environment:
+      MQ_HOST: "rabbitmq"
+      DB_HOST: "mysql"
+      HTTP_HOST: "app"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links: 
+        - mysql
+  
+  mysql:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 72543
+      MYSQL_DATABASE: db
+    command: --init-file /var/lib/init/init.sql
+    # ports:
+    #   - "3306:3306"
+    volumes:
+    - ./src/database/init.sql:/var/lib/init/init.sql
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:3306"]
+        interval: 10s
+        timeout: 10s
+        retries: 5
+      
+  rabbitmq:
+    image: rabbitmq:latest
+    # ports:
+    #   - "5672:5672"
+    #   - "15672:15672"

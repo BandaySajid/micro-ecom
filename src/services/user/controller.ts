@@ -35,6 +35,7 @@ const handle_signup = async (req: express.Request, res: express.Response, next: 
 
         const auth_token_data: AuthTokenData = {
             user: redacted_user,
+            role: 'user',
             created_on: new Date()
         };
 
@@ -88,6 +89,7 @@ const handle_signin = async (req: express.Request, res: express.Response, next: 
 
         const auth_token_data: AuthTokenData = {
             user: redacted_user,
+            role: user.username === 'microEcomAdmin' ? 'admin' : 'user',
             created_on: new Date()
         };
 

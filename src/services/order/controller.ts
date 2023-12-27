@@ -206,7 +206,34 @@ const handle_update_order = async (req: express.Request, res: express.Response, 
     };
 };
 
-const handle_delete_order = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const handle_cancel_order = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+        if (!req.body.order_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'order id is required',
+            });
+        };
+
+        const [cancelled_order] = await db.execute<ResultSetHeader>(`UPDATE orders SET status = 'CANCELLED' where order_id = ?`, [req.body.order_id]);
+
+        if (cancelled_order.affectedRows <= 0) {
+            return res.status(404).json({
+                status: 'error',
+                error: `order with id ${req.body.order_id} does not exist`
+            });
+        };
+
+        res.status(200).json({
+            status: 'success',
+            message: `order with id ${req.body.order_id} has been cancelled!`
+        });
+    } catch (error) {
+        next(error);
+    };
+};
+
+const handle_delete_orders = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
         const orders: Order[] = req.body.orders || [];
         if (orders.length <= 0) {
@@ -238,4 +265,4 @@ const handle_delete_order = async (req: express.Request, res: express.Response, 
     };
 };
 
-export default { handle_create_order, handle_update_order, handle_delete_order, handle_get_orders };
+export default { handle_create_order, handle_update_order, handle_delete_orders, handle_get_orders, handle_cancel_order };
